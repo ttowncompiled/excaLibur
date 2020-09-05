@@ -12,6 +12,14 @@ notation `{* ` P : 1 ` *} ` S : 1 ` {* ` Q : 1 ` *}` := partial_hoare P S Q
 
 namespace partial_hoare
 
+/-
+Sequent:
+
+
+        Skip     ___________
+
+                {P} skip {P}
+-/
 lemma skip_intro {P : scope → Prop} : {* P *} stmt.skip {* P *} :=
 begin
     intros s t hP hst,
@@ -19,6 +27,17 @@ begin
     exact hP,
 end
 
+/-
+Sequent:
+
+
+        Assign   __________________ ,
+
+                {P[a/x]} x := a {P}
+
+where P[a/x] means "the scope P where the proposition of a is substituted
+into the predicate x."
+-/
 lemma assign_intro (P : scope → Prop) {x : string} {a : scope → Prop} :
     {* λs, P (s{x ↦ a s}) *} stmt.assign x a {* P *} :=
 begin
@@ -27,6 +46,14 @@ begin
     exact hP,
 end
 
+/-
+Sequent:
+
+                {P} S {Q}   {Q} T {R}
+        Seq     _____________________
+
+                    {P} S ;; T {R}
+-/
 lemma seq_intro {P Q R : scope → Prop} {S T : stmt} (hS : {* P *} S {* Q *})
     (hT : {* Q *} T {* R *}) : {* P *} S ;; T {* R *} :=
 begin
@@ -47,6 +74,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                        {P ∧ b} S {Q}   {P ∧ ¬ b} T {Q}
+        If-Then-Else    _______________________________
+
+                            {P} if b then S else T {Q}
+-/
 lemma ite_intro {b P Q : scope → Prop} {S T : stmt}
     (hS : {* λ (s : scope), P s ∧ b s *} S {* Q *})
     (hT : {* λ (s : scope), P s ∧ ¬ b s *} T {* Q *}) :
@@ -74,6 +109,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                                    {P ∧ b} S {Q}
+        If-Then-Else-True   ______________________________
+
+                            {P ∧ b} if b then S else T {Q}
+-/
 lemma ite_true_intro {b P Q : scope → Prop} {S T : stmt}
     (hS : {* λ (s : scope), P s ∧ b s *} S {* Q *}) :
         {* λ (s : scope), P s ∧ b s *} stmt.ite b S T {* Q *} :=
@@ -96,6 +139,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                                    {P ∧ ¬ b} T {Q}
+        If-Then-Else-False  ________________________________
+
+                            {P ∧ ¬ b} if b then S else T {Q}
+-/
 lemma ite_false_intro {b P Q : scope → Prop} {S T : stmt}
     (hT : {* λ (s : scope), P s ∧ ¬ b s *} T {* Q *}) :
         {* λ (s : scope), P s ∧ ¬ b s *} stmt.ite b S T {* Q *} :=
@@ -118,6 +169,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                       {I ∧ b} S {I}
+        While   __________________________
+
+                {I} while b do S {I ∧ ¬ b}
+-/
 lemma while_intro (I : scope → Prop) {b : scope → Prop} {S : stmt}
     (hS : {* λ (s : scope), I s ∧ b s *} S {* I *}) :
         {* I *} stmt.while b S {* λ (s : scope), I s ∧ ¬ b s *} :=
@@ -146,8 +205,18 @@ begin
     }
 end
 
+/-
+Sequent:
+
+
+        While-False      _______________________________
+
+                        {P ∧ ¬ b} while b do S {P ∧ ¬ b}
+-/
 lemma while_false_intro {b P : scope → Prop} {S : stmt} :
-    {* λ (s : scope), P s ∧ ¬ b s *} stmt.while b S {* λ (s : scope), P s ∧ ¬ b s *} :=
+    {* λ (s : scope), P s ∧ ¬ b s *}
+    stmt.while b S
+    {* λ (s : scope), P s ∧ ¬ b s *} :=
 begin
     intros s t hP hst,
     cases hst,
@@ -161,6 +230,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                        P' → P  {P} S {Q}   Q → Q'
+        Consequence     __________________________
+
+                               {P'} S {Q'}
+-/
 lemma consequence {P P' Q Q' : scope → Prop} {S : stmt}
     (hP : ∀ (s : scope), P' s → P s) (hS : {* P *} S {* Q *})
     (hQ : ∀ (s : scope), Q s → Q' s) : {* P' *} S {* Q' *} :=
@@ -177,25 +254,68 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                            P' → P  {P} S {Q}
+        Consequence-Left    _________________
+
+                              {P'} S {Q}
+-/
 lemma consequence_left (P' : scope → Prop) {P Q : scope → Prop} {S : stmt}
     (hP : ∀ (s : scope), P' s → P s) (hS : {* P *} S {* Q *}) :
         {* P' *} S {* Q *} :=
 consequence hP hS (by cc)
 
+/-
+Sequent:
+
+                            {P} S {Q}   Q → Q'
+        Consequence-Right   __________________
+
+                                {P} S {Q'}
+-/
 lemma consequence_right (Q : scope → Prop) {P Q' : scope → Prop} {S : stmt}
     (hS : {* P *} S {* Q *}) (hQ : ∀ (s : scope), Q s → Q' s) :
         {* P *} S {* Q' *} :=
 consequence (by cc) hS hQ
 
+/-
+Sequent:
+
+                    P → Q
+        Skip'   ____________
+
+                {P} skip {Q}
+-/
 lemma skip_intro' {P Q : scope → Prop} (hP : ∀ (s : scope), P s → Q s) :
     {* P *} stmt.skip {* Q *} :=
 consequence hP skip_intro (by cc)
 
+/-
+Sequent:
+
+                  P → Q[a/x]
+        Assign' _____________ ,
+
+                {P} x := a {Q}
+
+where Q[a/x] means "the scope Q where the proposition of a is substituted
+into the predicate x."
+-/
 lemma assign_intro' {P Q : scope → Prop} {x : string} {a : scope → Prop}
     (hP : ∀ (s : scope), P s → Q (s{x ↦ a s})) :
         {* P *} stmt.assign x a {* Q *} :=
 consequence hP (assign_intro Q) (by cc)
 
+/-
+Sequent:
+
+                P' → P  {P} S {Q}   {Q} T {R}   R → R'
+        Seq'    ______________________________________
+
+                          {P'} S ;; T {R'}
+-/
 lemma seq_intro' {P P' Q R R' : scope → Prop} {S T : stmt}
     (hP : ∀ (s : scope), P' s → P s) (hS : {* P *} S {* Q *})
     (hT : {* Q *} T {* R *}) (hR : ∀ (s : scope), R s → R' s) :
@@ -225,16 +345,40 @@ begin
     }
 end
 
-lemma seq_intro'_left (P' : scope → Prop) {P Q R : scope → Prop} {S T : stmt}
+/-
+Sequent:
+
+                    P' → P  {P} S {Q}   {Q} T {R}
+        Seq-Left    _____________________________
+
+                          {P'} S ;; T {R}
+-/
+lemma seq_intro_left (P' : scope → Prop) {P Q R : scope → Prop} {S T : stmt}
     (hP : ∀ (s : scope), P' s → P s) (hS : {* P *} S {* Q *})
     (hT : {* Q *} T {* R *}) : {* P' *} S ;; T {* R *} :=
 consequence_left P' hP (seq_intro hS hT)
 
-lemma seq_intro'_right (R : scope → Prop) {P Q R' : scope → Prop} {S T : stmt}
+/-
+Sequent:
+
+                    {P} S {Q}   {Q} T {R}   R → R'
+        Seq-Right   ______________________________
+
+                           {P} S ;; T {R'}
+-/
+lemma seq_intro_right (R : scope → Prop) {P Q R' : scope → Prop} {S T : stmt}
     (hS : {* P *} S {* Q *}) (hT : {* Q *} T {* R *})
     (hR : ∀ (s : scope), R s → R' s) : {* P *} S ;; T {* R' *} :=
 consequence_right R (seq_intro hS hT) hR
 
+/-
+Sequent:
+
+                {I ∧ b} S {I}   P ∧ ¬ b → Q
+        While'  ___________________________
+
+                    {P} while b do S {Q}
+-/
 lemma while_intro' {b P Q : scope → Prop} {S : stmt} (I : scope → Prop)
     (hP : ∀ (s : scope), P s → I s)
     (hS : {* λ (s : scope), I s ∧ b s *} S {* I *})
@@ -260,7 +404,41 @@ begin
     }
 end
 
-lemma assign_intro_forward (P : scope → Prop) {x : string} {a : scope → Prop}  :
+/-
+Sequent:
+
+                                Q
+        Assign-Left     ___________________ ,
+
+                        {Q[a/x]} x := a {Q}
+
+where Q[a/x] means "the scope Q where the proposition of a is substituted
+into the predicate x."
+-/
+lemma assign_intro_left (Q : scope → Prop) {x : string} {a : scope → Prop}  :
+    {* λ (s : scope), ∃ (t' : Prop), Q (s{x ↦ t'}) ∧ t' = a s *}
+    stmt.assign x a
+    {* Q *} :=
+begin
+    apply assign_intro',
+    intros s hP,
+    cases hP,
+    rw ← hP_h.right,
+    exact hP_h.left
+end
+
+/-
+Sequent:
+
+                                P
+        Assign-Right    ___________________ ,
+
+                        {P} x := a {P[a/x]}
+
+where P[a/x] means "the scope P where the proposition of a is substituted
+into the predicate x."
+-/
+lemma assign_intro_right (P : scope → Prop) {x : string} {a : scope → Prop}  :
     {* P *}
     stmt.assign x a
     {* λ (s : scope), ∃ (t₀ : Prop), P (s{x ↦ t₀}) ∧ s x = a (s{x ↦ t₀}) *} :=
@@ -279,16 +457,6 @@ begin
         rw (scope.update_squash x (s x) (a s) s),
         rw (scope.update_id x s),
     }
-end
-
-lemma assign_intro_backward (Q : scope → Prop) {x : string} {a : scope → Prop}  :
-    {* λ (s : scope), ∃ (t' : Prop), Q (s{x ↦ t'}) ∧ t' = a s *} stmt.assign x a {* Q *} :=
-begin
-    apply assign_intro',
-    intros s hP,
-    cases hP,
-    rw ← hP_h.right,
-    exact hP_h.left
 end
 
 end partial_hoare
