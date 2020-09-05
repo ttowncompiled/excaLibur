@@ -36,7 +36,7 @@ Sequent:
                 {P[a/x]} x := a {P}
 
 where P[a/x] means "the scope P where the proposition of a is substituted
-into the predicate x."
+into the predicate x." If there is no predicate x, then one is created.
 -/
 lemma assign_intro (P : scope → Prop) {x : string} {a : scope → Prop} :
     {* λs, P (s{x ↦ a s}) *} stmt.assign x a {* P *} :=
@@ -112,56 +112,59 @@ end
 /-
 Sequent:
 
-                                    {P ∧ b} S {Q}
-        If-Then-Else-True   ______________________________
+                                P → b      {P} S {Q}
+        If-Then-Else-True   __________________________
 
-                            {P ∧ b} if b then S else T {Q}
+                            {P} if b then S else T {Q}
 -/
 lemma ite_true_intro {b P Q : scope → Prop} {S T : stmt}
-    (hS : {* λ (s : scope), P s ∧ b s *} S {* Q *}) :
-        {* λ (s : scope), P s ∧ b s *} stmt.ite b S T {* Q *} :=
+    (hP : ∀ (s : scope), P s → b s)
+    (hS : {* P *} S {* Q *}) :
+        {* P *} stmt.ite b S T {* Q *} :=
 begin
-    intros s t hP hst,
-    cases hst,
+    intros s t hP' hst,
+    apply hS,
     {
-        apply hS,
-        {
-            exact hP,
-        },
-        {
-            exact hst_hbody,
-        }
+        exact hP',
     },
     {
-        exfalso,
-        apply hst_hcond,
-        exact hP.right,
+        cases hst,
+        {
+            exact hst_hbody,
+        },
+        {
+            exfalso,
+            apply hst_hcond,
+            apply hP,
+            exact hP',
+        }
     }
 end
 
 /-
 Sequent:
 
-                                    {P ∧ ¬ b} T {Q}
-        If-Then-Else-False  ________________________________
+                                P → ¬ b     {P} T {Q}
+        If-Then-Else-False  __________________________
 
-                            {P ∧ ¬ b} if b then S else T {Q}
+                            {P} if b then S else T {Q}
 -/
 lemma ite_false_intro {b P Q : scope → Prop} {S T : stmt}
-    (hT : {* λ (s : scope), P s ∧ ¬ b s *} T {* Q *}) :
-        {* λ (s : scope), P s ∧ ¬ b s *} stmt.ite b S T {* Q *} :=
+    (hP : ∀ (s : scope), P s → ¬ b s)
+    (hT : {* P *} T {* Q *}) :
+        {* P *} stmt.ite b S T {* Q *} :=
 begin
-    intros s t hP hst,
-    cases hst,
+    intros s t hP' hst,
+    apply hT,
     {
-        exfalso,
-        apply hP.right,
-        exact hst_hcond,
+        exact hP',
     },
     {
-        apply hT,
+        cases hst,
         {
-            exact hP,
+            exfalso,
+            apply hP s hP',
+            exact hst_hcond,
         },
         {
             exact hst_hbody,
@@ -172,12 +175,12 @@ end
 /-
 Sequent:
 
-                       {I ∧ b} S {I}
-        While   __________________________
+                         {I ∧ b} S {I}
+        While-True  __________________________
 
-                {I} while b do S {I ∧ ¬ b}
+                    {I} while b do S {I ∧ ¬ b}
 -/
-lemma while_intro (I : scope → Prop) {b : scope → Prop} {S : stmt}
+lemma while_true_intro (I : scope → Prop) {b : scope → Prop} {S : stmt}
     (hS : {* λ (s : scope), I s ∧ b s *} S {* I *}) :
         {* I *} stmt.while b S {* λ (s : scope), I s ∧ ¬ b s *} :=
 begin
@@ -208,25 +211,23 @@ end
 /-
 Sequent:
 
+                                P → ¬ b
+        While-False     ____________________
 
-        While-False      _______________________________
-
-                        {P ∧ ¬ b} while b do S {P ∧ ¬ b}
+                        {P} while b do S {P}
 -/
-lemma while_false_intro {b P : scope → Prop} {S : stmt} :
-    {* λ (s : scope), P s ∧ ¬ b s *}
-    stmt.while b S
-    {* λ (s : scope), P s ∧ ¬ b s *} :=
+lemma while_false_intro {b P : scope → Prop} {S : stmt}
+    (hP : ∀ (s : scope), P s → ¬ b s) : {* P *} stmt.while b S {* P *} :=
 begin
-    intros s t hP hst,
+    intros s t hP' hst,
     cases hst,
     {
         exfalso,
-        apply hP.right,
+        apply hP s hP',
         exact hst_hcond,
     },
     {
-        exact hP,
+        exact hP',
     }
 end
 
@@ -301,7 +302,7 @@ Sequent:
                 {P} x := a {Q}
 
 where Q[a/x] means "the scope Q where the proposition of a is substituted
-into the predicate x."
+into the predicate x." If there is no predicate x, then one is created.
 -/
 lemma assign_intro' {P Q : scope → Prop} {x : string} {a : scope → Prop}
     (hP : ∀ (s : scope), P s → Q (s{x ↦ a s})) :
@@ -374,12 +375,12 @@ consequence_right R (comp_intro hS hT) hR
 /-
 Sequent:
 
-                {I ∧ b} S {I}   P ∧ ¬ b → Q
-        While'  ___________________________
+                P → I   {I ∧ b} S {I}   I ∧ ¬ b → Q
+        While   ___________________________________
 
                     {P} while b do S {Q}
 -/
-lemma while_intro' {b P Q : scope → Prop} {S : stmt} (I : scope → Prop)
+lemma while_intro {b P Q : scope → Prop} {S : stmt} (I : scope → Prop)
     (hP : ∀ (s : scope), P s → I s)
     (hS : {* λ (s : scope), I s ∧ b s *} S {* I *})
     (hQ : ∀ (s : scope), ¬ b s → I s → Q s) :
@@ -390,7 +391,7 @@ begin
         exact hP,
     },
     {
-        apply while_intro I hS,
+        apply while_true_intro I hS,
     },
     {
         intros s h,
@@ -413,7 +414,7 @@ Sequent:
                         {Q[a/x]} x := a {Q}
 
 where Q[a/x] means "the scope Q where the proposition of a is substituted
-into the predicate x."
+into the predicate x." If there is no predicate x, then one is created.
 -/
 lemma assign_intro_left (Q : scope → Prop) {x : string} {a : scope → Prop}  :
     {* λ (s : scope), ∃ (t' : Prop), Q (s{x ↦ t'}) ∧ t' = a s *}
@@ -436,7 +437,7 @@ Sequent:
                         {P} x := a {P[a/x]}
 
 where P[a/x] means "the scope P where the proposition of a is substituted
-into the predicate x."
+into the predicate x." If there is no predicate x, then one is created.
 -/
 lemma assign_intro_right (P : scope → Prop) {x : string} {a : scope → Prop}  :
     {* P *}
