@@ -50,11 +50,11 @@ end
 Sequent:
 
                 {P} S {Q}   {Q} T {R}
-        Seq     _____________________
+        Comp    _____________________
 
                     {P} S ;; T {R}
 -/
-lemma seq_intro {P Q R : scope → Prop} {S T : stmt} (hS : {* P *} S {* Q *})
+lemma comp_intro {P Q R : scope → Prop} {S T : stmt} (hS : {* P *} S {* Q *})
     (hT : {* Q *} T {* R *}) : {* P *} S ;; T {* R *} :=
 begin
     intros s t hP hst,
@@ -312,11 +312,11 @@ consequence hP (assign_intro Q) (by cc)
 Sequent:
 
                 P' → P  {P} S {Q}   {Q} T {R}   R → R'
-        Seq'    ______________________________________
+        Comp'   ______________________________________
 
                           {P'} S ;; T {R'}
 -/
-lemma seq_intro' {P P' Q R R' : scope → Prop} {S T : stmt}
+lemma comp_intro' {P P' Q R R' : scope → Prop} {S T : stmt}
     (hP : ∀ (s : scope), P' s → P s) (hS : {* P *} S {* Q *})
     (hT : {* Q *} T {* R *}) (hR : ∀ (s : scope), R s → R' s) :
         {* P' *} S ;; T {* R' *} :=
@@ -349,27 +349,27 @@ end
 Sequent:
 
                     P' → P  {P} S {Q}   {Q} T {R}
-        Seq-Left    _____________________________
+        Comp-Left   _____________________________
 
                           {P'} S ;; T {R}
 -/
-lemma seq_intro_left (P' : scope → Prop) {P Q R : scope → Prop} {S T : stmt}
+lemma comp_intro_left (P' : scope → Prop) {P Q R : scope → Prop} {S T : stmt}
     (hP : ∀ (s : scope), P' s → P s) (hS : {* P *} S {* Q *})
     (hT : {* Q *} T {* R *}) : {* P' *} S ;; T {* R *} :=
-consequence_left P' hP (seq_intro hS hT)
+consequence_left P' hP (comp_intro hS hT)
 
 /-
 Sequent:
 
                     {P} S {Q}   {Q} T {R}   R → R'
-        Seq-Right   ______________________________
+        Comp-Right  ______________________________
 
                            {P} S ;; T {R'}
 -/
-lemma seq_intro_right (R : scope → Prop) {P Q R' : scope → Prop} {S T : stmt}
+lemma comp_intro_right (R : scope → Prop) {P Q R' : scope → Prop} {S T : stmt}
     (hS : {* P *} S {* Q *}) (hT : {* Q *} T {* R *})
     (hR : ∀ (s : scope), R s → R' s) : {* P *} S ;; T {* R' *} :=
-consequence_right R (seq_intro hS hT) hR
+consequence_right R (comp_intro hS hT) hR
 
 /-
 Sequent:

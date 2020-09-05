@@ -9,7 +9,7 @@ inductive big_step : (stmt × scope) → scope → Prop
 | skip {s : scope} : big_step (stmt.skip, s) s
 | assign {x : string} {a : scope → Prop} {s : scope} :
     big_step (stmt.assign x a, s) (s{x ↦ a s})
-| seq {S T : stmt} {s t u : scope} (hS : big_step (S, s) t)
+| comp {S T : stmt} {s t u : scope} (hS : big_step (S, s) t)
     (hT : big_step (T, t) u) : big_step (S ;; T, s) u
 | ite_true {b : scope → Prop} {S T : stmt} {s t : scope} (hcond : b s)
     (hbody : big_step (S, s) t) : big_step (stmt.ite b S T, s) t
@@ -56,7 +56,7 @@ begin
     }
 end
 
-@[simp] lemma seq_iff {S T : stmt} {s t : scope} :
+@[simp] lemma comp_iff {S T : stmt} {s t : scope} :
     (S ;; T, s) ⟹ t ↔ (∃ (u : scope), (S, s) ⟹ u ∧ (T, u) ⟹ t) :=
 begin
     apply iff.intro,
@@ -70,7 +70,7 @@ begin
         intro h₂,
         cases h₂,
         cases h₂_h,
-        apply big_step.seq; assumption
+        apply big_step.comp; assumption
     }
 end
 

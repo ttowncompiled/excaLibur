@@ -8,8 +8,8 @@ import .basic
 inductive stmt : Type
 | skip      : stmt
 | assign    : string → (scope → Prop) → stmt
-| seq       : stmt → stmt → stmt
+| comp      : stmt → stmt → stmt
 | ite       : (scope → Prop) → stmt → stmt → stmt
 | while     : (scope → Prop) → stmt → stmt
 
-infixr ` ;; `:90 := stmt.seq
+infixr ` ;; `:90 := stmt.comp
