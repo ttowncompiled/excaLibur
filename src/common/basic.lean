@@ -31,14 +31,14 @@ a distinction about its propositions that is not commonly emphasized. The
 propositions are not assertions about the state of the program but about the
 state of the currently accessible scope.
 -/
-def scope := Π (name : string), Prop
+def scope := string → Prop
 
 def scope.update (name : string) (val : Prop) (s : scope) : scope :=
 λ (name' : string), if name' = name then val else s name'
 
-def empty.scope : scope := λ (name : string), Υ₀
-
 notation s `{` name ` ↦ ` val `}` := scope.update name val s
+
+instance : has_emptyc scope := { emptyc := λ _, Υ₀ }
 
 notation `[∅]` := empty.scope
 
