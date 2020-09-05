@@ -112,75 +112,12 @@ end
 /-
 Sequent:
 
-                                P → b      {P} S {Q}
-        If-Then-Else-True   __________________________
+                       {I ∧ b} S {I}
+        While   __________________________
 
-                            {P} if b then S else T {Q}
+                {I} while b do S {I ∧ ¬ b}
 -/
-lemma ite_true_intro {b P Q : scope → Prop} {S T : stmt}
-    (hP : ∀ (s : scope), P s → b s)
-    (hS : {* P *} S {* Q *}) :
-        {* P *} stmt.ite b S T {* Q *} :=
-begin
-    intros s t hP' hst,
-    apply hS,
-    {
-        exact hP',
-    },
-    {
-        cases hst,
-        {
-            exact hst_hbody,
-        },
-        {
-            exfalso,
-            apply hst_hcond,
-            apply hP,
-            exact hP',
-        }
-    }
-end
-
-/-
-Sequent:
-
-                                P → ¬ b     {P} T {Q}
-        If-Then-Else-False  __________________________
-
-                            {P} if b then S else T {Q}
--/
-lemma ite_false_intro {b P Q : scope → Prop} {S T : stmt}
-    (hP : ∀ (s : scope), P s → ¬ b s)
-    (hT : {* P *} T {* Q *}) :
-        {* P *} stmt.ite b S T {* Q *} :=
-begin
-    intros s t hP' hst,
-    apply hT,
-    {
-        exact hP',
-    },
-    {
-        cases hst,
-        {
-            exfalso,
-            apply hP s hP',
-            exact hst_hcond,
-        },
-        {
-            exact hst_hbody,
-        }
-    }
-end
-
-/-
-Sequent:
-
-                         {I ∧ b} S {I}
-        While-True  __________________________
-
-                    {I} while b do S {I ∧ ¬ b}
--/
-lemma while_true_intro (I : scope → Prop) {b : scope → Prop} {S : stmt}
+lemma while_intro (I : scope → Prop) {b : scope → Prop} {S : stmt}
     (hS : {* λ (s : scope), I s ∧ b s *} S {* I *}) :
         {* I *} stmt.while b S {* λ (s : scope), I s ∧ ¬ b s *} :=
 begin
@@ -205,29 +142,6 @@ begin
     },
     {
         exact and.intro hP hst_hcond,
-    }
-end
-
-/-
-Sequent:
-
-                                P → ¬ b
-        While-False     ____________________
-
-                        {P} while b do S {P}
--/
-lemma while_false_intro {b P : scope → Prop} {S : stmt}
-    (hP : ∀ (s : scope), P s → ¬ b s) : {* P *} stmt.while b S {* P *} :=
-begin
-    intros s t hP' hst,
-    cases hst,
-    {
-        exfalso,
-        apply hP s hP',
-        exact hst_hcond,
-    },
-    {
-        exact hP',
     }
 end
 
@@ -375,12 +289,75 @@ consequence_right R (comp_intro hS hT) hR
 /-
 Sequent:
 
-                P → I   {I ∧ b} S {I}   I ∧ ¬ b → Q
-        While   ___________________________________
+                                P → b      {P} S {Q}
+        If-Then-Else-True   __________________________
 
-                    {P} while b do S {Q}
+                            {P} if b then S else T {Q}
 -/
-lemma while_intro {b P Q : scope → Prop} {S : stmt} (I : scope → Prop)
+lemma ite_true_intro {b P Q : scope → Prop} {S T : stmt}
+    (hP : ∀ (s : scope), P s → b s)
+    (hS : {* P *} S {* Q *}) :
+        {* P *} stmt.ite b S T {* Q *} :=
+begin
+    intros s t hP' hst,
+    apply hS,
+    {
+        exact hP',
+    },
+    {
+        cases hst,
+        {
+            exact hst_hbody,
+        },
+        {
+            exfalso,
+            apply hst_hcond,
+            apply hP,
+            exact hP',
+        }
+    }
+end
+
+/-
+Sequent:
+
+                                P → ¬ b     {P} T {Q}
+        If-Then-Else-False  __________________________
+
+                            {P} if b then S else T {Q}
+-/
+lemma ite_false_intro {b P Q : scope → Prop} {S T : stmt}
+    (hP : ∀ (s : scope), P s → ¬ b s)
+    (hT : {* P *} T {* Q *}) :
+        {* P *} stmt.ite b S T {* Q *} :=
+begin
+    intros s t hP' hst,
+    apply hT,
+    {
+        exact hP',
+    },
+    {
+        cases hst,
+        {
+            exfalso,
+            apply hP s hP',
+            exact hst_hcond,
+        },
+        {
+            exact hst_hbody,
+        }
+    }
+end
+
+/-
+Sequent:
+
+                            P → I   {I ∧ b} S {I}   I ∧ ¬ b → Q
+        While-Invariant     ___________________________________
+
+                                  {P} while b do S {Q}
+-/
+lemma while_invariant {b P Q : scope → Prop} {S : stmt} (I : scope → Prop)
     (hP : ∀ (s : scope), P s → I s)
     (hS : {* λ (s : scope), I s ∧ b s *} S {* I *})
     (hQ : ∀ (s : scope), ¬ b s → I s → Q s) :
@@ -391,7 +368,7 @@ begin
         exact hP,
     },
     {
-        apply while_true_intro I hS,
+        apply while_intro I hS,
     },
     {
         intros s h,
@@ -402,6 +379,89 @@ begin
         {
             exact h.left,
         }
+    }
+end
+
+/-
+Sequent:
+
+                        {P ∧ b} S ;; while b do S {Q}   P ∧ ¬ b → Q
+        While-Right     ___________________________________________
+
+                                   {P} while b do S {Q}
+-/
+lemma while_right {b P Q : scope → Prop} {S : stmt}
+    (hS : {* λ (s : scope), P s ∧ b s *} S ;; stmt.while b S {* Q *})
+    (hQ : ∀ (s : scope), ¬ b s → P s → Q s) :
+        {* P *} stmt.while b S {* Q *} :=
+begin
+    intros s t hP hst,
+    cases hst,
+    {
+        apply hS,
+        {
+            exact and.intro hP hst_hcond,
+        },
+        {
+            apply big_step.comp hst_hbody hst_hrest,
+        }
+    },
+    {
+        apply hQ s hst_hcond hP,
+    }
+end
+
+/-
+Sequent:
+
+                                P → b   {P} S ;; while b do S {Q}
+        While-Unwind-Right      _________________________________
+
+                                    {P} while b do S {Q}
+-/
+lemma while_unwind_right {b P Q : scope → Prop} {S : stmt}
+    (hP : ∀ (s : scope), P s → b s)
+    (hS : {* P *} S ;; stmt.while b S {* Q *}) :
+        {* P *} stmt.while b S {* Q *} :=
+begin
+    intros s t hP' hst,
+    cases hst,
+    {
+        apply hS,
+        {
+            exact hP',
+        },
+        {
+            apply big_step.comp hst_hbody hst_hrest,
+        }
+    },
+    {
+        exfalso,
+        apply hst_hcond,
+        apply hP s hP',
+    }
+end
+
+/-
+Sequent:
+
+                                P → ¬ b
+        While-False     ____________________
+
+                        {P} while b do S {P}
+-/
+lemma while_false_intro {b P : scope → Prop} {S : stmt}
+    (hP : ∀ (s : scope), P s → ¬ b s) : {* P *} stmt.while b S {* P *} :=
+begin
+    intros s t hP' hst,
+    cases hst,
+    {
+        exfalso,
+        apply hP s hP',
+        exact hst_hcond,
+    },
+    {
+        exact hP',
     }
 end
 
