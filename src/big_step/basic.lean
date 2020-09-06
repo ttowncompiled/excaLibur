@@ -20,8 +20,10 @@ inductive big_step : (stmt × scope) → scope → Prop
         big_step (stmt.while b S, s) u
 | while_false {b : scope → Prop} {S : stmt} {s t u : scope} (hcond : ¬ b s) :
     big_step (stmt.while b S, s) s
-| call {σ₀ : string} {y : scope → Prop} {T : stmt} {s t : scope}
-    (hT : big_step (T, s{σ₀ ↦ y s}) t) : big_step (stmt.call σ₀ y, s) t
+| call {f : string} {v₀ v₁ y : Prop} {T : stmt} {s t : scope}
+    {σ : scope → scope} (hS : big_step (stmt.skip, s) (σ s))
+    (hT : big_step (T, (σ s)) t)
+        : big_step (stmt.call f v₀ v₁ y T, s) t
 
 infix ` ⟹ `:110 := big_step
 
@@ -230,20 +232,22 @@ begin
     }
 end
 
-lemma call_iff {σ₀ : string} {y : scope → Prop} {s t : scope} :
-    (stmt.call σ₀ y, s) ⟹ t ↔ (∃ (T : stmt), (T, s{σ₀ ↦ y s}) ⟹ t) :=
+lemma call_iff {f : string} {v₀ v₁ y : Prop} {T : stmt} {s t : scope} :
+    (stmt.call f v₀ v₁ y T, s) ⟹ t ↔
+        (∃ (σ : scope → scope), (stmt.skip, s) ⟹ (σ s) ∧ (T, (σ s)) ⟹ t) :=
 begin
     apply iff.intro,
     {
         intro h₁,
         cases h₁,
-        apply exists.intro h₁_T,
-        exact h₁_hT,
+        apply exists.intro h₁_σ,
+        apply and.intro h₁_hS h₁_hT,
     },
     {
         intro h₂,
         cases h₂,
-        apply big_step.call h₂_h,
+        cases h₂_h,
+        apply big_step.call h₂_h_left h₂_h_right,
     }
 end
 

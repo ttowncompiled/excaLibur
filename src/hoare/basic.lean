@@ -59,9 +59,9 @@ lemma comp_intro {P Q R : scope → Prop} {S T : stmt} (hS : {* P *} S {* Q *})
 begin
     intros s t hP hst,
     cases hst,
-    apply hT,
+    apply hT hst_t,
     {
-        apply hS,
+        apply hS s,
         {
             exact hP,
         },
@@ -142,6 +142,43 @@ begin
     },
     {
         exact and.intro hP hst_hcond,
+    }
+end
+
+/-
+Sequent:
+
+                {P} skip {P[∀ (y' v'), y'/v']}  {P[∀ (y' v'), y'/v']} T {Q}
+        Call    ___________________________________________________________ ,
+
+                                    {P} call f v₀ v₁ y T {Q}
+
+where P[∀ (y' v'), y'/v'] means "the scope P where, for each pair of
+predicate y' and proposition v', v' is substituted into the predicate y'."
+If there is no predicate y', then one is created. The propositions v' are terms
+of v₀, which is a conjunction of the input (read-only) arguments to f.
+The predicates y' are terms of y, which is a conjunction of the local variables
+of f. v₁ is a conjunction of the output (read-write) arguments to f.
+-/
+lemma call_intro {P Q : scope → Prop} {f : string} {v₀ v₁ y : Prop} {T : stmt}
+    {σ : scope → scope} (hS : {* P *} stmt.skip {* λ (s : scope), P (σ s) *})
+    (hT : {* λ (s : scope), P (σ s) *} T {* Q *}) :
+        {* P *} stmt.call f v₀ v₁ y T {* Q *} :=
+begin
+    intros s t hP hst,
+    cases hst,
+    apply hT (hst_σ s),
+    {
+        apply hS s,
+        {
+            exact hP,
+        },
+        {
+            exact hst_hS,
+        }
+    },
+    {
+        exact hst_hT,
     }
 end
 
@@ -477,7 +514,7 @@ where Q[a/x] means "the scope Q where the proposition of a is substituted
 into the predicate x." If there is no predicate x, then one is created.
 -/
 lemma assign_intro_left (Q : scope → Prop) {x : string} {a : scope → Prop}  :
-    {* λ (s : scope), ∃ (t' : Prop), Q (s{x ↦ t'}) ∧ t' = a s *}
+    {* λ (s : scope), ∃ (t₀ : Prop), Q (s{x ↦ t₀}) ∧ t₀ = a s *}
     stmt.assign x a
     {* Q *} :=
 begin

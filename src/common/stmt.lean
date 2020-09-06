@@ -11,6 +11,6 @@ inductive stmt : Type
 | comp      : stmt → stmt → stmt
 | ite       : (scope → Prop) → stmt → stmt → stmt
 | while     : (scope → Prop) → stmt → stmt
-| call      : string → (scope → Prop) → stmt
+| call      : string → Prop → Prop → Prop → stmt → stmt
 
 infixr ` ;; `:90 := stmt.comp
