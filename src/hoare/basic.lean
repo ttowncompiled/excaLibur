@@ -39,7 +39,7 @@ where P[a/x] means "the scope P where the proposition of a is substituted
 into the predicate x." If there is no predicate x, then one is created.
 -/
 lemma assign_intro (P : scope → Prop) {x : string} {a : scope → Prop} :
-    {* λs, P (s{x ↦ a s}) *} stmt.assign x a {* P *} :=
+    {* λ (s : scope), P (s{x ↦ a s}) *} stmt.assign x a {* P *} :=
 begin
     intros s t hP hst,
     cases hst,
