@@ -20,6 +20,8 @@ inductive big_step : (stmt × scope) → scope → Prop
         big_step (stmt.while b S, s) u
 | while_false {b : scope → Prop} {S : stmt} {s t u : scope} (hcond : ¬ b s) :
     big_step (stmt.while b S, s) s
+| call {σ₀ : string} {y : scope → Prop} {T : stmt} {s t : scope}
+    (hT : big_step (T, s{σ₀ ↦ y s}) t) : big_step (stmt.call σ₀ y, s) t
 
 infix ` ⟹ `:110 := big_step
 
@@ -225,6 +227,23 @@ begin
         intro h₂,
         rw h₂,
         apply big_step.while_false; assumption
+    }
+end
+
+lemma call_iff {σ₀ : string} {y : scope → Prop} {s t : scope} :
+    (stmt.call σ₀ y, s) ⟹ t ↔ (∃ (T : stmt), (T, s{σ₀ ↦ y s}) ⟹ t) :=
+begin
+    apply iff.intro,
+    {
+        intro h₁,
+        cases h₁,
+        apply exists.intro h₁_T,
+        exact h₁_hT,
+    },
+    {
+        intro h₂,
+        cases h₂,
+        apply big_step.call h₂_h,
     }
 end
 
