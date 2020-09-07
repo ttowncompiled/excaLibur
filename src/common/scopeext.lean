@@ -7,11 +7,13 @@ import .basic
 
 namespace scope
 
+meta def tactic.dec_trivial := `[exact dec_trivial]
+
 @[simp] lemma update_apply (name : string) (val : Prop) (s : scope) :
   s{name ↦ val} name = val := if_pos rfl
 
 @[simp] lemma update_apply_ne (name name' : string) (val : Prop)
-    (s : scope) [h : decidable (name' ≠ name)] (hname : name' ≠ name) :
+    (s : scope) (hname : name' ≠ name . tactic.dec_trivial) :
         s{name ↦ val} name' = s name' := if_neg hname
 
 @[simp] lemma update_id (name : string) (s : scope) :
@@ -46,7 +48,7 @@ begin
 end
 
 @[simp] lemma update_swap (name₁ name₂ : string) (val₁ val₂ : Prop)
-    (s: scope) (hname : name₁ ≠ name₂) :
+    (s: scope) (hname : name₁ ≠ name₂ . tactic.dec_trivial) :
         s{name₂ ↦ val₂}{name₁ ↦ val₁} = s{name₁ ↦ val₁}{name₂ ↦ val₂} :=
 begin
     apply funext,
