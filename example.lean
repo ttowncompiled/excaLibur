@@ -1,7 +1,5 @@
 import common hoare.basic big_step.basic
 
-lemma le_of_lt_succ {a b : ℕ} : a < b → (nat.succ a) ≤ b := sorry
-
 def IS_S2 {BuffChng : Prop} (Len Cap I: ℕ) : stmt :=
     stmt.ite (λ s, (s "I" → I ≤ Cap) ∧ s "Conn" ∧ s "AuthConn" ∧ ¬ s "BuffChng")
         ((stmt.assign "I" (λ s, (I = 1))) ;; (stmt.assign "Cap" (λ s, (Cap = Len))) ;; (stmt.assign "BuffChng" (λ s, BuffChng)))
@@ -71,7 +69,7 @@ begin
                 rw hCap,
                 intros hCap hI,
                 rw [hI, hCap],
-                apply le_of_lt_succ,
+                apply nat.succ_le_of_lt,
                 exact h₅,
             }
         }
