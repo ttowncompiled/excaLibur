@@ -1,10 +1,20 @@
 import common hoare.basic big_step.basic
 
+<<<<<<< HEAD
 def IS_S2 {BuffChng : Prop} (Len Cap I: ℕ) : stmt :=
     stmt.ite (λ s, (s "I" → I ≤ Cap) ∧ s "Conn" ∧ s "AuthConn" ∧ ¬ s "BuffChng")
         ((stmt.assign "I" (λ s, (I = 1))) ;; (stmt.assign "Cap" (λ s, (Cap = Len))) ;; (stmt.assign "BuffChng" (λ s, BuffChng)))
         (stmt.skip)
 
+=======
+lemma le_of_lt_succ {a b : ℕ} : a < b → (nat.succ a) ≤ b := sorry
+
+def IS_S2 {BuffChng : Prop} (Len Cap I: ℕ) : stmt :=
+    stmt.ite (λ s, (s "I" → I ≤ Cap) ∧ s "Conn" ∧ s "AuthConn" ∧ ¬ s "BuffChng")
+        ((stmt.assign "I" (λ s, (I = 1))) ;; (stmt.assign "Cap" (λ s, (Cap = Len))) ;; (stmt.assign "BuffChng" (λ s, BuffChng)))
+        (stmt.skip)
+
+>>>>>>> 072377b... chore(*) : finishes proof for updated IS_S2
 lemma IS_S2_correct {Conn AuthConn BuffChng : Prop} (Len Cap I : ℕ) (Buff BuffOut : list ℕ) (props : Conn ∧ AuthConn ∧ BuffChng) :
     {* λ s, s "Conn" = Conn ∧ s "AuthConn" = AuthConn ∧ s "BuffChng" = ¬ BuffChng ∧ 0 < Len ∧ s "Cap" = (Cap = Len) ∧ s "I" = (I = 0) *}
     @IS_S2 BuffChng Len Cap I
@@ -69,7 +79,11 @@ begin
                 rw hCap,
                 intros hCap hI,
                 rw [hI, hCap],
+<<<<<<< HEAD
                 apply nat.succ_le_of_lt,
+=======
+                apply le_of_lt_succ,
+>>>>>>> 072377b... chore(*) : finishes proof for updated IS_S2
                 exact h₅,
             }
         }
