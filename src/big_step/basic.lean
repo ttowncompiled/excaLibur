@@ -316,11 +316,11 @@ Sequent:
                                                         args = (v₀ s) ∧ (v₁ s)
                         (call f v₀ v₁ T, s) ⟹ t
 -/
-lemma call_iff {f : string} {v₀ v₁ : scope → Prop} {T : stmt} {s t : scope}
-    (args : (v₀ s) ∧ (v₁ s)) :
-    (stmt.call f v₀ v₁ T, s) ⟹ t ↔
-        (∃ (σ : scope → (scope → Prop) → (scope → Prop) → scope),
-            (stmt.skip, s) ⟹ (σ s v₀ v₁) ∧ (T, (σ s v₀ v₁)) ⟹ t) :=
+@[simp] lemma call_iff {f : string} {v₀ v₁ : scope → Prop} {T : stmt}
+    {s t : scope} (args : (v₀ s) ∧ (v₁ s)) :
+        (stmt.call f v₀ v₁ T, s) ⟹ t ↔
+            (∃ (σ : scope → (scope → Prop) → (scope → Prop) → scope),
+                (stmt.skip, s) ⟹ (σ s v₀ v₁) ∧ (T, (σ s v₀ v₁)) ⟹ t) :=
 begin
     apply iff.intro,
     {
