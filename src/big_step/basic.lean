@@ -29,6 +29,14 @@ infix ` ⟹ `:110 := big_step
 
 namespace big_step
 
+/-
+Sequent:
+
+
+        Skip    _______________
+
+                (skip, s) ⟹ s
+-/
 @[simp] lemma skip_iff {s t : scope} : (stmt.skip, s) ⟹ t ↔ t = s :=
 begin
     apply iff.intro,
@@ -44,6 +52,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+
+        Assign  __________________________
+
+                {x := a, s) ⟹ s{x ↦ a s}
+-/
 @[simp] lemma assign_iff {x : string} {a : scope → Prop} {s t : scope} :
     (stmt.assign x a, s) ⟹ t ↔ t = (s{x ↦ a s}) :=
 begin
@@ -60,8 +76,16 @@ begin
     }
 end
 
-@[simp] lemma comp_iff {S T : stmt} {s t : scope} :
-    (S ;; T, s) ⟹ t ↔ (∃ (u : scope), (S, s) ⟹ u ∧ (T, u) ⟹ t) :=
+/-
+Sequent:
+
+                (S, s) ⟹ t  (T, t) ⟹ u
+        Comp    ________________________
+
+                    (S ;; T, s) ⟹ u
+-/
+@[simp] lemma comp_iff {S T : stmt} {s u : scope} :
+    (S ;; T, s) ⟹ u ↔ (∃ (t : scope), (S, s) ⟹ t ∧ (T, t) ⟹ u) :=
 begin
     apply iff.intro,
     {
@@ -78,6 +102,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                        (b s) ∧ (S, s) ⟹ t     ¬ (b s) ∧ (T, s) ⟹ t
+        If-Then-Else    _____________________________________________
+
+                                  (if b then S else T, s) ⟹ t
+-/
 @[simp] lemma ite_iff {b : scope → Prop} {S T : stmt} {s t : scope} :
     (stmt.ite b S T, s) ⟹ t ↔ (b s ∧ (S, s) ⟹ t) ∨ (¬ b s ∧ (T, s) ⟹ t) :=
 begin
@@ -108,6 +140,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                                    (S, s) ⟹ t
+        If-Then-Else-True   _____________________________ (b s) is TRUE
+
+                            (if b then S else T, s) ⟹ t
+-/
 @[simp] lemma ite_true_iff {b : scope → Prop} {S T : stmt} {s t : scope}
     (hcond : b s) : (stmt.ite b S T, s) ⟹ t ↔ (S, s) ⟹ t :=
 begin
@@ -129,6 +169,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                                    (T, s) ⟹ t
+        If-Then-Else-False  _____________________________ (b s) is FALSE
+
+                            (if b then S else T, s) ⟹ t
+-/
 @[simp] lemma ite_false_iff {b : scope → Prop} {S T : stmt} {s t : scope}
     (hcond : ¬ b s) : (stmt.ite b S T, s) ⟹ t ↔ (T, s) ⟹ t :=
 begin
@@ -150,9 +198,17 @@ begin
     }
 end
 
+/-
+Sequent:
+
+        (b s) ∧ (S, s) ⟹ t  (b s) ∧ (while b do S, t) ⟹ u   ¬ (b s) ∧ u = s
+While   _____________________________________________________________________
+
+                            (while b do S, s) ⟹ u
+-/
 lemma while_iff {b : scope → Prop} {S : stmt} {s u : scope} :
-    (stmt.while b S, s) ⟹ u ↔ (∃ (t : scope), b s ∧ (S, s) ⟹ t
-        ∧ (stmt.while b S, t) ⟹ u) ∨ (¬ b s ∧ u = s) :=
+    (stmt.while b S, s) ⟹ u ↔ (b s ∧ (∃ (t : scope), (S, s) ⟹ t
+        ∧ (stmt.while b S, t) ⟹ u)) ∨ (¬ b s ∧ u = s) :=
 begin
     apply iff.intro,
     {
@@ -160,6 +216,8 @@ begin
         cases h₁,
         {
             apply or.intro_left,
+            split,
+                exact h₁_hcond,
             apply exists.intro h₁_t,
             cc
         },
@@ -172,8 +230,8 @@ begin
         intro h₂,
         cases h₂,
         case or.inl {
-            cases h₂ with t h₂,
             cases h₂ with hb h₂,
+            cases h₂ with t h₂,
             cases h₂ with hS hwhile,
             exact big_step.while_true hb hS hwhile,
         },
@@ -185,6 +243,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                    (S, s) ⟹ t      (while b do S, t) ⟹ u
+        While-True  _______________________________________ (b s) is TRUE
+
+                            (while b do S, s) ⟹ u
+-/
 lemma while_true_iff {b : scope → Prop} {S : stmt} {s u : scope}
     (hcond : b s) : (stmt.while b S, s) ⟹ u ↔
         (∃ (t : scope), (S, s) ⟹ t ∧ (stmt.while b S, t) ⟹ u) :=
@@ -210,6 +276,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+
+        While-False     ______________________ (b s) is FALSE
+
+                        (while b do S, s) ⟹ s
+-/
 @[simp] lemma while_false_iff {b : scope → Prop} {S : stmt} {s t:  scope}
     (hcond : ¬ b s) : (stmt.while b S, s) ⟹ t ↔ t = s :=
 begin
@@ -232,6 +306,14 @@ begin
     }
 end
 
+/-
+Sequent:
+
+                    P → Q
+        Skip'   ____________
+
+                {P} skip {Q}
+-/
 lemma call_iff {f : string} {v₀ v₁ y : Prop} {T : stmt} {s t : scope} :
     (stmt.call f v₀ v₁ y T, s) ⟹ t ↔
         (∃ (σ : scope → scope), (stmt.skip, s) ⟹ (σ s) ∧ (T, (σ s)) ⟹ t) :=
