@@ -1,4 +1,4 @@
-import common hoare.basic big_step.basic
+import common hoare.basic
 
 <<<<<<< HEAD
 def IS_S2 {BuffChng : Prop} (Len Cap I: ℕ) : stmt :=
