@@ -148,29 +148,27 @@ end
 /-
 Sequent:
 
-            P → (v₀ s) ∧ (v₁ s) {P} skip {P[f(v₀,v₁)]}  {P[f(v₀,v₁)]} T {Q}
-    Call    _______________________________________________________________ ,
+            P → (v₀ s) ∧ (v₁ s) {P} skip {P[(σ s)]}  {P[(σ s)]} T {Q}
+    Call    _________________________________________________________ ,
 
-                              {P} call f v₀ v₁ T {Q}
+                            {P} call f v₀ v₁ σ T {Q}
 
-where P[f(v₀,v₁)] means "the scope P injected with the predicates of f given
-input (read-only) arguments v₀ and in-out (read-write) arguments v₁." The
-predicates of f include input (read-only) parameters, in-out (read-write)
+where P[(σ s)] means "the scope P injected with the predicates of (σ s)." The
+predicates of (σ s) include input (read-only) parameters, in-out (read-write)
 paramters, local variables. These predicates (except for those predicates
 relating to v₁) must use a distinct naming convention, so that predicates
 of s are not overwritten. Return statements that return a local variable
 must be reformulated as an in-out parameter.
 -/
 lemma call_intro {v₀ v₁ P Q : scope → Prop} {f : string} {T : stmt}
-    {σ : scope → (scope → Prop) → (scope → Prop) → scope}
-    (hargs : ∀ (s : scope), P s → (v₀ s ∧ v₁ s))
-    (hS : {* P *} stmt.skip {* λ (s : scope), P (σ s v₀ v₁) *})
-    (hT : {* λ (s : scope), P (σ s v₀ v₁) *} T {* Q *}) :
-        {* P *} stmt.call f v₀ v₁ T {* Q *} :=
+    {σ : scope → scope} (hargs : ∀ (s : scope), P s → (v₀ s ∧ v₁ s))
+    (hS : {* P *} stmt.skip {* λ (s : scope), P (σ s) *})
+    (hT : {* λ (s : scope), P (σ s) *} T {* Q *}) :
+        {* P *} stmt.call f v₀ v₁ σ T {* Q *} :=
 begin
     intros s t hP hst,
     cases hst,
-    apply hT (hst_σ s v₀ v₁),
+    apply hT (σ s),
     {
         apply hS s,
         {

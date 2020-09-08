@@ -21,11 +21,10 @@ inductive big_step : (stmt × scope) → scope → Prop
 | while_false {b : scope → Prop} {S : stmt} {s : scope} (hcond : ¬ b s) :
     big_step (stmt.while b S, s) s
 | call {f : string} {v₀ v₁ : scope → Prop} {T : stmt} {s t : scope}
-    {σ : scope → (scope → Prop) → (scope → Prop) → scope}
-    (args : (v₀ s) ∧ (v₁ s))
-    (hS : big_step (stmt.skip, s) (σ s v₀ v₁))
-    (hT : big_step (T, (σ s v₀ v₁)) t)
-        : big_step (stmt.call f v₀ v₁ T, s) t
+    {σ : scope → scope} (args : (v₀ s) ∧ (v₁ s))
+    (hS : big_step (stmt.skip, s) (σ s))
+    (hT : big_step (T, (σ s)) t)
+        : big_step (stmt.call f v₀ v₁ σ T, s) t
 
 infix ` ⟹ `:110 := big_step
 
@@ -311,29 +310,26 @@ end
 /-
 Sequent:
 
-            (skip, s) ⟹ (σ s v₀ v₁)     (T, (σ s v₀ v₁)) ⟹ t
-    Call    __________________________________________________ ∀ args,
-                                                        args = (v₀ s) ∧ (v₁ s)
-                        (call f v₀ v₁ T, s) ⟹ t
+            (skip, s) ⟹ (σ s)     (T, (σ s)) ⟹ t
+    Call    ______________________________________ ∀ args,
+                                                    args = (v₀ s) ∧ (v₁ s)
+                    (call f v₀ v₁ σ T, s) ⟹ t
 -/
 @[simp] lemma call_iff {f : string} {v₀ v₁ : scope → Prop} {T : stmt}
-    {s t : scope} (args : (v₀ s) ∧ (v₁ s)) :
-        (stmt.call f v₀ v₁ T, s) ⟹ t ↔
-            (∃ (σ : scope → (scope → Prop) → (scope → Prop) → scope),
-                (stmt.skip, s) ⟹ (σ s v₀ v₁) ∧ (T, (σ s v₀ v₁)) ⟹ t) :=
+    {s t : scope} {σ : scope → scope} (args : (v₀ s) ∧ (v₁ s)) :
+        (stmt.call f v₀ v₁ σ T, s) ⟹ t ↔
+            ((stmt.skip, s) ⟹ (σ s) ∧ (T, (σ s)) ⟹ t) :=
 begin
     apply iff.intro,
     {
         intro h₁,
         cases h₁,
-        apply exists.intro h₁_σ,
         apply and.intro h₁_hS h₁_hT,
     },
     {
         intro h₂,
         cases h₂,
-        cases h₂_h,
-        apply big_step.call args h₂_h_left h₂_h_right,
+        apply big_step.call args h₂_left h₂_right,
     }
 end
 

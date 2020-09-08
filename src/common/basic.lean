@@ -33,12 +33,12 @@ state of the currently accessible scope.
 -/
 def scope := Π (name : string), Prop
 
-def scope.update (name : string) (val : Prop) (s : scope) : scope :=
+@[simp] def scope.update (name : string) (val : Prop) (s : scope) : scope :=
 λ (name' : string), if name' = name then val else s name'
 
 notation s `{` name ` ↦ ` val `}` := scope.update name val s
 
-instance : has_emptyc scope := { emptyc := λ _, Υ₀ }
+@[simp] def empty.scope := (λ (_ : string), Υ₀)
 
 notation `[∅]` := empty.scope
 
