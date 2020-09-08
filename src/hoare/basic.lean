@@ -148,26 +148,29 @@ end
 /-
 Sequent:
 
-                {P} skip {P[∀ (y' v'), y'/v']}  {P[∀ (y' v'), y'/v']} T {Q}
-        Call    ___________________________________________________________ ,
+            P → (v₀ s) ∧ (v₁ s) {P} skip {P[f(v₀,v₁)]}  {P[f(v₀,v₁)]} T {Q}
+    Call    _______________________________________________________________ ,
 
-                                    {P} call f v₀ v₁ y T {Q}
+                              {P} call f v₀ v₁ T {Q}
 
-where P[∀ (y' v'), y'/v'] means "the scope P where, for each pair of
-predicate y' and proposition v', v' is substituted into the predicate y'."
-If there is no predicate y', then one is created. The propositions v' are terms
-of v₀, which is a conjunction of the input (read-only) arguments to f.
-The predicates y' are terms of y, which is a conjunction of the local variables
-of f. v₁ is a conjunction of the output (read-write) arguments to f.
+where P[f(v₀,v₁)] means "the scope P injected with the predicates of f given
+input (read-only) arguments v₀ and in-out (read-write) arguments v₁." The
+predicates of f include input (read-only) parameters, in-out (read-write)
+paramters, local variables. These predicates (except for those predicates
+relating to v₁) must use a distinct naming convention, so that predicates
+of s are not overwritten. Return statements that return a local variable
+must be reformulated as an in-out parameter.
 -/
-lemma call_intro {P Q : scope → Prop} {f : string} {v₀ v₁ y : Prop} {T : stmt}
-    {σ : scope → scope} (hS : {* P *} stmt.skip {* λ (s : scope), P (σ s) *})
-    (hT : {* λ (s : scope), P (σ s) *} T {* Q *}) :
-        {* P *} stmt.call f v₀ v₁ y T {* Q *} :=
+lemma call_intro {v₀ v₁ P Q : scope → Prop} {f : string} {T : stmt}
+    {σ : scope → (scope → Prop) → (scope → Prop) → scope}
+    (hargs : ∀ (s : scope), P s → (v₀ s ∧ v₁ s))
+    (hS : {* P *} stmt.skip {* λ (s : scope), P (σ s v₀ v₁) *})
+    (hT : {* λ (s : scope), P (σ s v₀ v₁) *} T {* Q *}) :
+        {* P *} stmt.call f v₀ v₁ T {* Q *} :=
 begin
     intros s t hP hst,
     cases hst,
-    apply hT (hst_σ s),
+    apply hT (hst_σ s v₀ v₁),
     {
         apply hS s,
         {
