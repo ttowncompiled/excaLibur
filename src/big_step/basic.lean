@@ -18,7 +18,7 @@ inductive big_step : (stmt × scope) → scope → Prop
 | while_true {b : scope → Prop} {S : stmt} {s t u: scope} (hcond : b s)
     (hbody : big_step (S, s) t) (hrest : big_step (stmt.while b S, t) u) :
         big_step (stmt.while b S, s) u
-| while_false {b : scope → Prop} {S : stmt} {s t u : scope} (hcond : ¬ b s) :
+| while_false {b : scope → Prop} {S : stmt} {s : scope} (hcond : ¬ b s) :
     big_step (stmt.while b S, s) s
 | call {f : string} {v₀ v₁ y : Prop} {T : stmt} {s t : scope}
     {σ : scope → scope} (hS : big_step (stmt.skip, s) (σ s))
@@ -92,13 +92,13 @@ begin
         intro h₁,
         cases h₁,
         apply exists.intro,
-        apply and.intro; assumption
+        apply and.intro h₁_hS h₁_hT,
     },
     {
         intro h₂,
         cases h₂,
         cases h₂_h,
-        apply big_step.comp; assumption
+        apply big_step.comp h₂_h_left h₂_h_right,
     }
 end
 
@@ -119,11 +119,11 @@ begin
         cases h₁,
         {
             apply or.intro_left,
-            cc,
+            apply and.intro h₁_hcond h₁_hbody,
         },
         {
             apply or.intro_right,
-            cc,
+            apply and.intro h₁_hcond h₁_hbody,
         }
     },
     {
@@ -131,11 +131,11 @@ begin
         cases h₂,
         {
             cases h₂,
-            apply big_step.ite_true; assumption
+            apply big_step.ite_true h₂_left h₂_right,
         },
         {
             cases h₂,
-            apply big_step.ite_false; assumption
+            apply big_step.ite_false h₂_left h₂_right,
         }
     }
 end
@@ -160,12 +160,12 @@ begin
         },
         {
             exfalso,
-            apply h₁_hcond; assumption
+            apply h₁_hcond hcond,
         }
     },
     {
         intro h₂,
-        apply big_step.ite_true; assumption
+        apply big_step.ite_true hcond h₂,
     }
 end
 
@@ -186,7 +186,7 @@ begin
         cases h₁,
         {
             exfalso,
-            apply hcond; assumption
+            apply hcond h₁_hcond,
         },
         {
             exact h₁_hbody,
@@ -194,7 +194,7 @@ begin
     },
     {
         intro h₂,
-        apply big_step.ite_false; assumption
+        apply big_step.ite_false hcond h₂,
     }
 end
 
@@ -219,11 +219,11 @@ begin
             split,
                 exact h₁_hcond,
             apply exists.intro h₁_t,
-            cc
+            apply and.intro h₁_hbody h₁_hrest,
         },
         {
             apply or.intro_right,
-            cc,
+            apply and.intro h₁_hcond (rfl),
         }
     },
     {
@@ -238,7 +238,7 @@ begin
         case or.inr {
             cases h₂ with hb h₂,
             rw h₂,
-            apply big_step.while_false; assumption
+            apply big_step.while_false hb,
         }
     }
 end
@@ -261,11 +261,11 @@ begin
         cases h₁,
         {
             apply exists.intro h₁_t,
-            cc,
+            apply and.intro h₁_hbody h₁_hrest,
         },
         {
             exfalso,
-            apply h₁_hcond; assumption
+            apply h₁_hcond hcond,
         }
     },
     {
@@ -293,7 +293,7 @@ begin
         cases h₁,
         {
             exfalso,
-            apply hcond; assumption
+            apply hcond h₁_hcond,
         },
         {
             refl,
@@ -302,7 +302,7 @@ begin
     {
         intro h₂,
         rw h₂,
-        apply big_step.while_false; assumption
+        apply big_step.while_false hcond,
     }
 end
 
