@@ -28,6 +28,19 @@ inductive big_step : (stmt × scope) → scope → Prop
 
 infix ` ⟹ `:110 := big_step -- ⟹ \==>
 
+/-
+Instructions for how to use big_step and its notation
+
+Big step semantics are used to represent the scope change of an instruction or
+composition of instructions that is executed synchronously/deterministically.
+A big_step can be defined using the following notation
+
+                                (S, s) ⟹ t
+
+where S is a statement (from common.stmt) and s t are each a
+scope (from common.basic). This notation constructs an instance of big_step
+that represents the execution of stmt S with scope s that results in scope t.
+-/
 namespace big_step
 
 /-
