@@ -1,14 +1,17 @@
 import common hoare.basic
 
 def IS_S5 {AdminIns InsAdmin : Prop} (D D_in BloodSugar : ℕ) : stmt :=
-    (stmt.call "bloodSugarLevel"
-              (λ s, s "D" → (D = D_in))
-              (λ s, s "BloodSugar" → (BloodSugar = 0))
-              (λ (s : scope), s{"bloodSugarCap" ↦ s "D"})
-              (stmt.assign "BloodSugar" (λ _, (BloodSugar = D + 1)))) ;;
-    (stmt.ite (λ s, s "AdminIns" ∨ (s "D" → s "BloodSugar" → (D < BloodSugar)))
-              (stmt.assign "InsAdmin" (λ _, InsAdmin))
-              (stmt.skip))
+    _call_ "bloodSugarLevel"
+    _with_ ("D" ⇒ (D = D_in), "BloodSugar" ⇒ (BloodSugar = 0)) |↦| (λ (s : scope), s{"bloodSugarCap" ↦ s "D"})
+    _do_ {
+        _let_ "BloodSugar" := (BloodSugar = D + 1),
+    } ;;
+    _if_ (λ s, s "AdminIns" ∨ (s "D" → s "BloodSugar" → (D < BloodSugar)))
+    _then_ {
+        _let_ "InsAdmin" := InsAdmin,
+    } _else_ {
+        _skip_
+    }
 
 theorem IS_S5_correct {AdminIns InsAdmin : Prop} (D_in D BloodSugar : ℕ) (props : AdminIns ∧ InsAdmin) :
     {* λ s, s "AdminIns" = AdminIns ∧ s "InsAdmin" = ¬ InsAdmin ∧ 0 < D_in ∧ s "D" = (D = D_in) ∧ s "BloodSugar" = (BloodSugar = 0) *}

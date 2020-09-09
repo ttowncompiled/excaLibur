@@ -1,9 +1,14 @@
 import common hoare.basic
 
 def IS_S2 {BuffChng : Prop} (Len Cap I: ℕ) : stmt :=
-    stmt.ite (λ s, (s "I" → I ≤ Cap) ∧ s "Conn" ∧ s "AuthConn" ∧ ¬ s "BuffChng")
-        ((stmt.assign "I" (λ s, (I = 0))) ;; (stmt.assign "Cap" (λ s, (Cap = Len))) ;; (stmt.assign "BuffChng" (λ s, BuffChng)))
-        (stmt.skip)
+    _if_ (λ s, (s "I" → I ≤ Cap) ∧ s "Conn" ∧ s "AuthConn" ∧ ¬ s "BuffChng")
+    _then_ {
+        _let_ "I" := (I = 0), ;;
+        _let_ "Cap" := (Cap = Len), ;;
+        _let_ "BuffChng" := BuffChng,
+    } _else_ {
+        _skip_
+    }
 
 lemma IS_S2_correct {Conn AuthConn BuffChng : Prop} (Len Cap I : ℕ) (Buff BuffOut : list ℕ) (props : Conn ∧ AuthConn ∧ BuffChng) :
     {* λ s, s "Conn" = Conn ∧ s "AuthConn" = AuthConn ∧ s "BuffChng" = ¬ BuffChng ∧ 0 < Len ∧ s "Cap" = (Cap = Len) ∧ s "I" = (I = 0) *}
