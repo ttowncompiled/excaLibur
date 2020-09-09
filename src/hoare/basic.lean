@@ -587,4 +587,27 @@ begin
     }
 end
 
+/-
+Sequent:
+
+            P → (v₀ s) ∧ (v₁ s)  P → P[(σ s)]  {P[(σ s)]} F {Q}  Q → Q'
+    Call'   ___________________________________________________________ ,
+
+                            {P} call f v₀ v₁ σ F {Q`}
+
+where P[(σ s)] means "the scope P injected with the predicates of (σ s)." The
+predicates of (σ s) include input (read-only) parameters, in-out (read-write)
+paramters, local variables. These predicates (except for those predicates
+relating to v₁) must use a distinct naming convention, so that predicates
+of s are not overwritten. Return statements that return a local variable
+must be reformulated as an in-out parameter.    -- σ \s
+-/
+lemma call_intro' {v₀ v₁ P Q Q' : scope → Prop} {f : string} {F : stmt}
+    {σ : scope → scope} (hargs : ∀ (s : scope), P s → (v₀ s ∧ v₁ s))
+    (hP : ∀ (s : scope), P s → P (σ s))
+    (hF : {* λ (s : scope), P (σ s) *} F {* Q *})
+    (hQ : ∀ (s : scope), Q s → Q' s) :
+        {* P *} stmt.call f v₀ v₁ σ F {* Q' *} :=
+consequence_right Q (call_intro hargs hP hF) hQ
+
 end partial_hoare
