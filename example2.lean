@@ -34,7 +34,6 @@ begin
             exact ha₅,
         },
         {
-            apply partial_hoare.skip_intro',
             intros s₂ hS,
             cases hS with h₁ h₂,
             cases h₂ with h₂ h₃,
