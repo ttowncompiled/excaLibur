@@ -25,6 +25,7 @@ inductive big_step : (stmt × scope) → scope → Prop
         : big_step (stmt.call f v₀ v₁ σ F, s) t
 
 infix ` ⟹ `:110 := big_step -- ⟹ \==>
+infix ` ==> `:110 := big_step
 
 /-
 Instructions for how to use big_step and its notation
