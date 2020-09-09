@@ -1,9 +1,9 @@
 import common hoare.basic
 
-def IS_S5 {AdminIns InsAdmin : Prop} (D BloodSugar : ℕ) : stmt :=
+def IS_S5 {AdminIns InsAdmin : Prop} (D D_in BloodSugar : ℕ) : stmt :=
     (stmt.call "bloodSugarLevel"
-              (λ s, s "D")
-              (λ s, s "BloodSugar")
+              (λ s, s "D" → (D = D_in))
+              (λ s, s "BloodSugar" → (BloodSugar = 0))
               (λ (s : scope), s{"bloodSugarCap" ↦ s "D"})
               (stmt.assign "BloodSugar" (λ _, (BloodSugar = D + 1)))) ;;
     (stmt.ite (λ s, s "AdminIns" ∨ (s "D" → s "BloodSugar" → (D < BloodSugar)))
@@ -11,8 +11,8 @@ def IS_S5 {AdminIns InsAdmin : Prop} (D BloodSugar : ℕ) : stmt :=
               (stmt.skip))
 
 theorem IS_S5_correct {AdminIns InsAdmin : Prop} (D_in D BloodSugar : ℕ) (props : AdminIns ∧ InsAdmin) :
-    {* λ s, s "AdminIns" = AdminIns ∧ s "InsAdmin" = ¬ InsAdmin ∧ 0 < D_in ∧ s "D" ∧ s "D" = (D = D_in) ∧ s "BloodSugar" ∧ s "BloodSugar" = (BloodSugar = 0) *}
-    @IS_S5 AdminIns InsAdmin D BloodSugar
+    {* λ s, s "AdminIns" = AdminIns ∧ s "InsAdmin" = ¬ InsAdmin ∧ 0 < D_in ∧ s "D" = (D = D_in) ∧ s "BloodSugar" = (BloodSugar = 0) *}
+    @IS_S5 AdminIns InsAdmin D D_in BloodSugar
     {* λ s, s "AdminIns" = AdminIns ∧ s "InsAdmin" = InsAdmin ∧ 0 < D_in ∧ s "D" = (D = D_in) ∧ s "BloodSugar" = (BloodSugar = D + 1) *} :=
 begin
     rw IS_S5,
@@ -25,9 +25,13 @@ begin
             cases a₂ with a₂ a₃,
             cases a₃ with a₃ a₄,
             cases a₄ with a₄ a₅,
-            cases a₅ with a₆ a₇,
-            cases a₇ with a₇ a₈,
-            apply and.intro a₄ a₇,
+            split,
+                intro ha₄,
+                rw ← a₄,
+                exact ha₄,
+            intro ha₅,
+            rw ← a₅,
+            exact ha₅,
         },
         {
             apply partial_hoare.skip_intro',
@@ -36,8 +40,6 @@ begin
             cases h₂ with h₂ h₃,
             cases h₃ with h₃ h₄,
             cases h₄ with h₄ h₅,
-            cases h₅ with h₅ h₆,
-            cases h₆ with h₆ h₇,
             split,
                 rw ← h₁,
                 apply scope.update_apply_ne,
@@ -47,18 +49,9 @@ begin
             split,
                 exact h₃,
             split,
-                rw scope.update,
-                rw if_t_t ("D" = "bloodSugarCap") (s₂ "D"),
-                exact h₄,
-            split,
-                rw ← h₅,
+                rw ← h₄,
                 apply scope.update_apply_ne,
-            split,
-                rw scope.update,
-                have hname : "BloodSugar" ≠ "bloodSugarCap", by exact dec_trivial,
-                rw if_neg (hname),
-                exact h₆,
-            rw ← h₇,
+            rw ← h₅,
             apply scope.update_apply_ne,
         },
         {
@@ -76,9 +69,7 @@ begin
             cases h₄ with h₄ h₅,
             cases h₅ with h₅ h₆,
             cases h₆ with h₆ h₇,
-            rw [scope.update_apply_ne] at h₁,
-            simp at h₁,
-            -- have hname : "BloodSugar" ≠ "bloodSugarCap", by exact dec_trivial,
+            repeat {rw scope.update_apply_ne at h₁},
             rw h₁,
             left,
             exact props.1,
@@ -92,21 +83,16 @@ begin
             cases h₃ with h₃ h₄,
             cases h₄ with h₄ h₅,
             cases h₅ with h₅ h₆,
-            cases h₆ with h₆ h₇,
-            cases h₇ with h₇ h₈,
+            simp,
             split,
                 rw ← h₁,
+                symmetry,
                 apply scope.update_apply_ne,
-            split,
-                apply scope.update_apply,
             split,
                 exact h₄,
             split,
-                simp, simp at h₆,
-                have hname : "D" ≠ "BloodSugar", by exact dec_trivial,
-                rw if_neg (hname) at h₆,
-                exact h₆,
-            simp,
+                repeat {rw scope.update_apply_ne at h₅},
+                exact h₅,
             exact h₂,
         }
     }
