@@ -10,6 +10,39 @@ def partial_hoare (P : scope → Prop) (S : stmt) (Q : scope → Prop) : Prop :=
 
 notation `{* ` P : 1 ` *} ` S : 1 ` {* ` Q : 1 ` *}` := partial_hoare P S Q
 
+/-
+Instructions for how to use partial_hoare and its notation
+
+A partial Hoare triple is used to represent the pre- and post-condition of
+an instruction or composition of instructions. A partial Hoare can be
+constructed with the following notation.
+
+                                {* P *} S {* Q *}
+
+P is the pre-condition and Q is the post condition of
+statement S (from common.stmt). It states that when stmt S is executed with
+pre-condition P, it will either (a) terminate with post-condition Q or
+(b) not terminate. These Hoare triples are referred to as partial Hoare triples
+precisely because a stmt S executed with pre-condition P may not terminate.
+
+This partial Hoare triple is implemented using big_step semantics, so it is
+used to construct proofs of properties of a program which
+executes synchronously/deterministically.
+
+Given any big_step (S, s) ⟹ t, there is a corresponding partial Hoare triple
+
+                            {* P s *} S {* Q t *}
+
+Note that P and Q are both defined with the type scope → Prop. Thus, the
+pre-condition P is defined over the scope s in which stmt S is executed while
+the post-condition Q is defined over the scope t which results from the
+execution of stmt S in scope s.
+
+This construction of a partial Hoare triple from big_step semantics allows us
+to more easily reason over the properties of statement S. See documentation
+in big_step.basic for more information on big_step semantics. See documentation
+in common.basic for more information on specifying program properties.
+-/
 namespace partial_hoare
 
 /-
