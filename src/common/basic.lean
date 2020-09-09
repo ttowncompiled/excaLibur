@@ -8,9 +8,9 @@ constant Ill    : Prop  -- indeterminate "ill-defined" proposition
 constant Nil    : Prop  -- null proposition
 constant Undfn  : Prop  -- undefined proposition ; not within scope
 
-notation `γ₀`   := Ill      -- \gamma\zero
-notation `ω₀`   := Nil      -- \omega\zero
-notation `Υ₀`   := Undfn    -- \Upsilon\zero
+notation `γ₀`   := Ill      -- γ₀ \gamma\zero
+notation `ω₀`   := Nil      -- ω₀ \omega\zero
+notation `Υ₀`   := Undfn    -- Υ₀ \Upsilon\zero
 
 /-
 Mapping of a variable name to an assertion about that variable.
@@ -31,16 +31,16 @@ a distinction about its propositions that is not commonly emphasized. The
 propositions are not assertions about the state of the program but about the
 state of the currently accessible scope.
 -/
-def scope := Π (name : string), Prop
+def scope := Π (name : string), Prop    -- Π \Pi
 
 @[simp] def scope.update (name : string) (val : Prop) (s : scope) : scope :=
-λ (name' : string), if name' = name then val else s name'
+λ (name' : string), if name' = name then val else s name'   -- λ \lam
 
 @[simp] def empty.scope := (λ (_ : string), Υ₀)
 
-notation s `{` name ` ↦ ` val `}` := scope.update name val s
+notation s `{` name ` ↦ ` val `}` := scope.update name val s    -- ↦ \mapsto
 
-notation `[∅]` := empty.scope
+notation `[∅]` := empty.scope   -- ∅ \empty
 
 notation `[` name ` ↦ ` val `]` := scope.update name val [∅]
 

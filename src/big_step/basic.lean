@@ -26,7 +26,7 @@ inductive big_step : (stmt × scope) → scope → Prop
     (hT : big_step (T, (σ s)) t)
         : big_step (stmt.call f v₀ v₁ σ T, s) t
 
-infix ` ⟹ `:110 := big_step
+infix ` ⟹ `:110 := big_step -- ⟹ \==>
 
 namespace big_step
 
