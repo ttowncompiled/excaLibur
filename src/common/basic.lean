@@ -33,10 +33,10 @@ state of the currently accessible scope.
 -/
 def scope := Π (name : string), Prop    -- Π \Pi
 
-@[simp] def scope.update (name : string) (val : Prop) (s : scope) : scope :=
+def scope.update (name : string) (val : Prop) (s : scope) : scope :=
 λ (name' : string), if name' = name then val else s name'   -- λ \lam
 
-@[simp] def empty.scope := (λ (_ : string), Υ₀)
+def empty.scope := (λ (_ : string), Υ₀)
 
 notation s `{` name ` ↦ ` val `}` := scope.update name val s    -- ↦ \mapsto
 
