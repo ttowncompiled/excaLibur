@@ -61,7 +61,7 @@ begin
     {
         intro h₂,
         rw h₂,
-        exact big_step.skip,
+        exact skip,
     }
 end
 
@@ -85,7 +85,7 @@ begin
     {
         intro h₂,
         rw h₂,
-        exact big_step.assign,
+        exact assign,
     }
 end
 
@@ -111,7 +111,7 @@ begin
         intro h₂,
         cases h₂,
         cases h₂_h,
-        apply big_step.comp h₂_h_left h₂_h_right,
+        apply comp h₂_h_left h₂_h_right,
     }
 end
 
@@ -144,11 +144,11 @@ begin
         cases h₂,
         {
             cases h₂,
-            apply big_step.ite_true h₂_left h₂_right,
+            apply ite_true h₂_left h₂_right,
         },
         {
             cases h₂,
-            apply big_step.ite_false h₂_left h₂_right,
+            apply ite_false h₂_left h₂_right,
         }
     }
 end
@@ -178,7 +178,7 @@ begin
     },
     {
         intro h₂,
-        apply big_step.ite_true hcond h₂,
+        apply ite_true hcond h₂,
     }
 end
 
@@ -207,7 +207,7 @@ begin
     },
     {
         intro h₂,
-        apply big_step.ite_false hcond h₂,
+        apply ite_false hcond h₂,
     }
 end
 
@@ -229,8 +229,7 @@ begin
         cases h₁,
         {
             apply or.intro_left,
-            split,
-                exact h₁_hcond,
+            apply and.intro h₁_hcond,
             apply exists.intro h₁_t,
             apply and.intro h₁_hbody h₁_hrest,
         },
@@ -246,12 +245,12 @@ begin
             cases h₂ with hb h₂,
             cases h₂ with t h₂,
             cases h₂ with hS hwhile,
-            exact big_step.while_true hb hS hwhile,
+            exact while_true hb hS hwhile,
         },
         case or.inr {
             cases h₂ with hb h₂,
             rw h₂,
-            apply big_step.while_false hb,
+            apply while_false hb,
         }
     }
 end
@@ -285,7 +284,7 @@ begin
         intro h₂,
         cases h₂ with t h₂,
         cases h₂ with hS hwhile,
-        apply big_step.while_true hcond hS hwhile,
+        apply while_true hcond hS hwhile,
     }
 end
 
@@ -315,7 +314,7 @@ begin
     {
         intro h₂,
         rw h₂,
-        apply big_step.while_false hcond,
+        apply while_false hcond,
     }
 end
 
@@ -339,7 +338,7 @@ begin
     },
     {
         intro h₂,
-        apply big_step.call args h₂,
+        apply call args h₂,
     }
 end
 
