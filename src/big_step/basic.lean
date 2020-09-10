@@ -20,8 +20,8 @@ inductive big_step : (stmt × scope) → scope → Prop
         big_step (stmt.while b S, s) u
 | while_false {b : scope → Prop} {S : stmt} {s : scope} (hcond : ¬ b s) :
     big_step (stmt.while b S, s) s
-| call {f : string} {v₀ v₁ : scope → Prop} {F : stmt} {s t : scope}
-    {σ : scope → scope} (args : (v₀ s) ∧ (v₁ s)) (hF : big_step (F, (σ s)) t)
+| call {f : string} {v₀ v₁ : scope → Prop} {σ : scope → scope} {F : stmt}
+    {s t : scope} (args : v₀ s ∧ v₁ s) (hF : big_step (F, (σ s)) t)
         : big_step (stmt.call f v₀ v₁ σ F, s) t
 
 infix ` ⟹ `:110 := big_step -- ⟹ \==>
@@ -71,7 +71,7 @@ Sequent:
 
         Assign  __________________________
 
-                {x := a, s) ⟹ s{x ↦ a s}
+                (x := a, s) ⟹ s{x ↦ a s}
 -/
 @[simp] lemma assign_iff {x : string} {a : scope → Prop} {s t : scope} :
     (stmt.assign x a, s) ⟹ t ↔ t = (s{x ↦ a s}) :=
